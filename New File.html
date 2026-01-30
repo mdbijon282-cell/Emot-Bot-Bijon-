@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Cyber Loader</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- মোবাইল ফ্রেন্ডলি -->
+    <style>
+        /* বেসিক সেটআপ */
+        body { margin: 0; overflow: hidden; background: #000; font-family: 'Courier New', monospace; }
+        canvas { display: block; position: absolute; top: 0; left: 0; z-index: 1; }
+
+        /* --- মেইন হোম পেজ কন্টেন্ট (শুরুতে লুকানো থাকবে) --- */
+        #main-content {
+            display: none; /* প্রথমে হাইড করা */
+            position: absolute;
+            top: 50%; left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 30px;
+            border-radius: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            animation: fadeIn 1s ease;
+        }
+
+        h1 { font-size: 2.5rem; margin: 0; letter-spacing: 5px; animation: textGlow 2s infinite alternate; }
+        p { font-size: 1rem; margin: 10px 0 20px 0; }
+        @keyframes textGlow {
+            from { text-shadow: 0 0 10px #fff, 0 0 20px #fff; }
+            to { text-shadow: 0 0 20px #ff00de, 0 0 30px #ff00de; }
+        }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* বাটন স্টাইল */
+        .enter-btn {
+            display: inline-block;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: bold;
+            color: #0ff;
+            background: transparent;
+            border: 2px solid #0ff;
+            border-radius: 10px;
+            text-decoration: none;
+            cursor: pointer;
+            transition: 0.3s all;
+        }
+        .enter-btn:hover {
+            background: #0ff;
+            color: #000;
+        }
+
+        /* --- লোডিং স্ক্রিন স্টাইল (Style 1) --- */
+        #loader-overlay {
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85);
+            z-index: 20;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: #0ff;
+        }
+
+        .loader-container { width: 300px; text-align: center; }
+        
+        /* Style 1: Neon Bar */
+        .progress-bar-bg {
+            width: 100%; height: 10px; background: #333;
+            border-radius: 5px; margin-top: 15px; overflow: hidden;
+            box-shadow: 0 0 10px #0ff;
+        }
+        .progress-bar-fill {
+            height: 100%; width: 0%; background: #0ff;
+            box-shadow: 0 0 15px #0ff;
+            transition: width 0.05s linear;
+        }
+        .loading-text { font-size: 24px; font-weight: bold; letter-spacing: 2px; }
+
+        /* মোবাইল রেসপন্সিভ */
+        @media (max-width: 500px) {
+            h1 { font-size: 2rem; }
+            p { font-size: 0.9rem; }
+            .enter-btn { padding: 10px 25px; font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ব্যাকগ্রাউন্ড এনিমেশন (ক্যানভাস) -->
+    <canvas id="particleCanvas"></canvas>
+
+    <!-- লোডিং স্ক্রিন -->
+    <div id="loader-overlay">
+        <div class="loader-container">
+            <div class="loading-text">LOADING <span id="percent">0%</span></div>
+            <div class="progress-bar-bg">
+                <div class="progress-bar-fill" id="progress-fill"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- হোম পেজ কন্টেন্ট -->
+    <div id="main-content">
+        <h1>BIJON ADMIN</h1>
+        <p> 'Server Online • Welcome User</p>
+        <a href="https://enxnxnsnsmsns.blogspot.com/?m=1" target="_blank" class="enter-btn">STATE BOT</a>
+    </div>
+
+    <script>
+        // --- 1. পার্টিক্যাল ব্যাকগ্রাউন্ড ---
+        const canvas = document.getElementById('particleCanvas');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+        let particlesArray;
+        let hue = 0;
+        let mouse = { x: null, y: null, radius: 150 };
+
+        window.addEventListener('mousemove', function(event) {
+            mouse.x = event.x;
+            mouse.y = event.y;
+        });
+
+        class Particle {
+            constructor(x, y) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.speedX = (Math.random() * 3) - 1.5; 
+                this.speedY = (Math.random() * 3) - 1.5; 
+                this.size = Math.random() * 3 + 1;
+            }
+            update() {
+                this.x += this.speedX;
+                this.y += this.speedY;
+                if (this.size > 0.2) this.size -= 0.01;
+                else this.size = Math.random() * 3 + 1;
+                if (this.x > canvas.width || this.x < 0) this.speedX = -this.speedX;
+                if (this.y > canvas.height || this.y < 0) this.speedY = -this.speedY;
+            }
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fillStyle = `hsl(${hue}, 100%, 50%)`;
+                ctx.fill();
+            }
+        }
+
+        function init() {
+            particlesArray = [];
+            let numberOfParticles = (canvas.height * canvas.width) / 5000;
+            for (let i = 0; i < numberOfParticles; i++) {
+                particlesArray.push(new Particle());
+            }
+        }
+
+        function handleParticles() {
+            for (let i = 0; i < particlesArray.length; i++) {
+                particlesArray[i].update();
+                particlesArray[i].draw();
+                for (let j = i; j < particlesArray.length; j++) {
+                    const dx = particlesArray[i].x - particlesArray[j].x;
+                    const dy = particlesArray[i].y - particlesArray[j].y;
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    if (distance < 120) {
+                        ctx.beginPath();
+                        ctx.strokeStyle = `hsl(${hue}, 100%, 50%)`; 
+                        ctx.lineWidth = 0.5;
+                        ctx.moveTo(particlesArray[i].x, particlesArray[i].y);
+                        ctx.lineTo(particlesArray[j].x, particlesArray[j].y);
+                        ctx.stroke();
+                        ctx.closePath();
+                    }
+                }
+            }
+        }
+
+        function animate() {
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.1)'; 
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            handleParticles();
+            hue += 2; 
+            requestAnimationFrame(animate);
+        }
+        
+        window.addEventListener('resize', () => {
+            canvas.width = innerWidth; canvas.height = innerHeight; init();
+        });
+        init();
+        animate();
+
+        // --- 2. লোডিং সিস্টেম ---
+        let progress = 0;
+        const percentSpan = document.getElementById('percent');
+        const loaderOverlay = document.getElementById('loader-overlay');
+        const mainContent = document.getElementById('main-content');
+        const progressFill = document.getElementById('progress-fill');
+
+        let loadingInterval = setInterval(() => {
+            progress++;
+            percentSpan.innerText = progress + "%";
+            if(progressFill) progressFill.style.width = progress + "%";
+
+            if (progress >= 100) {
+                clearInterval(loadingInterval);
+                loaderOverlay.style.opacity = '0';
+                loaderOverlay.style.transition = 'opacity 1s ease';
+                
+                setTimeout(() => {
+                    loaderOverlay.style.display = 'none';
+                    mainContent.style.display = 'block'; // হোম পেজ দেখাও
+                }, 1000);
+            }
+        }, 50);
+    </script>
+</body>
+</html>
